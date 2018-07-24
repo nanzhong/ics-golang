@@ -31,8 +31,7 @@ type Parser struct {
 	wg              *sync.WaitGroup
 }
 
-var	trimcont = strings.NewReplacer( "\r\n ", "", "\n ", "")
-
+var trimcont = strings.NewReplacer("\r\n ", "", "\n ", "")
 
 // creates new parser
 func New() *Parser {
@@ -164,9 +163,9 @@ func (p *Parser) getICal(url string) (string, error) {
 	//  read the file with the ical data
 	var fileContent []byte
 	var errReadFile error
-	
+
 	if url == "-" {
-		fileContent, errReadFile = ioutil.ReadAll( os.Stdin)
+		fileContent, errReadFile = ioutil.ReadAll(os.Stdin)
 	} else {
 		fileContent, errReadFile = ioutil.ReadFile(fileName)
 	}
@@ -189,9 +188,9 @@ func (p *Parser) getICal(url string) (string, error) {
 func (p *Parser) parseICalContent(iCalContent, url string) {
 	ical := NewCalendar()
 	p.parsedCalMutex.Lock()
-	p.parsedCalendars = append(p.parsedCalendars, ical)  //Needs Mutex to protect append and increment
-	p.idCounter++              
-	p.parsedCalMutex.Unlock()  // Subsequent filling of ical is to unshared objects.
+	p.parsedCalendars = append(p.parsedCalendars, ical) //Needs Mutex to protect append and increment
+	p.idCounter++
+	p.parsedCalMutex.Unlock() // Subsequent filling of ical is to unshared objects.
 
 	// split the data into calendar info and events data
 	eventsData, calInfo := explodeICal(iCalContent)
@@ -268,7 +267,7 @@ func (p *Parser) parseEvents(cal *Calendar, eventsData []string) {
 		end := p.parseEventEnd(eventData)
 		// whole day event when both times are 00:00:00
 		wholeDay := start.Hour() == 0 && end.Hour() == 0 && start.Minute() == 0 && end.Minute() == 0 && start.Second() == 0 && end.Second() == 0
-		
+
 		event.SetDTStamp(p.parseEventDTStamp(eventData))
 		event.SetStatus(p.parseEventStatus(eventData))
 		event.SetSummary(p.parseEventSummary(eventData))
@@ -433,9 +432,9 @@ func (p *Parser) parseEvents(cal *Calendar, eventsData []string) {
 
 // parses the event summary
 func (p *Parser) parseEventSummary(eventData string) string {
-	re, _ := regexp.Compile(`SUMMARY(?:;.*?|):.*?\n(?:\s+.*?\n)*`)  // This will accept parameters and additional lines
+	re, _ := regexp.Compile(`SUMMARY(?:;.*?|):.*?\n(?:\s+.*?\n)*`) // This will accept parameters and additional lines
 	result := re.FindString(eventData)
-	return trimField(trimcont.Replace(result), "SUMMARY.*?:")  // This concatenates additional lines and discards all parameters
+	return trimField(trimcont.Replace(result), "SUMMARY.*?:") // This concatenates additional lines and discards all parameters
 }
 
 // parses the event status
@@ -447,56 +446,56 @@ func (p *Parser) parseEventStatus(eventData string) string {
 
 // parses the event description
 func (p *Parser) parseEventDescription(eventData string) string {
-	re, _ := regexp.Compile(`DESCRIPTION(?:;.*?|):.*?\n(?:\s+.*?\n)*`)  // This will accept parameters and additional lines
+	re, _ := regexp.Compile(`DESCRIPTION(?:;.*?|):.*?\n(?:\s+.*?\n)*`) // This will accept parameters and additional lines
 	result := re.FindString(eventData)
-	return trimField(trimcont.Replace(result), "DESCRIPTION.*?:")  // This concatenates additional lines and discards all parameters
+	return trimField(trimcont.Replace(result), "DESCRIPTION.*?:") // This concatenates additional lines and discards all parameters
 }
 
 // parses the event id provided form google
 func (p *Parser) parseEventId(eventData string) string {
-	re, _ := regexp.Compile(`UID;?.*?:.*?\n`)  // This will accept parameters
+	re, _ := regexp.Compile(`UID;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	return trimField(result, "UID.*?:")  // This will discard all parameters
+	return trimField(result, "UID.*?:") // This will discard all parameters
 }
 
 // parses the event class
 func (p *Parser) parseEventClass(eventData string) string {
 	re, _ := regexp.Compile(`CLASS;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	return trimField(result, "CLASS.*?:")  // This will discard all parameters
+	return trimField(result, "CLASS.*?:") // This will discard all parameters
 }
 
 // parses the event sequence
 func (p *Parser) parseEventSequence(eventData string) int {
 	re, _ := regexp.Compile(`SEQUENCE;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	sq, _ := strconv.Atoi(trimField(result, "SEQUENCE.*?:"))  // This will discard all parameters
+	sq, _ := strconv.Atoi(trimField(result, "SEQUENCE.*?:")) // This will discard all parameters
 	return sq
 }
 
 // parses the event created time
 func (p *Parser) parseEventCreated(eventData string) time.Time {
-	re, _ := regexp.Compile(`CREATED;?.*?:.*?\n`)  // This will accept parameters
+	re, _ := regexp.Compile(`CREATED;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	created := trimField(result, "CREATED.*?:")  // This will discard all parameters
+	created := trimField(result, "CREATED.*?:") // This will discard all parameters
 	t, _ := time.Parse(IcsFormat, created)
 	return t
 }
 
 // parses the event modified time
 func (p *Parser) parseEventModified(eventData string) time.Time {
-	re, _ := regexp.Compile(`LAST-MODIFIED;?.*?:.*?\n`)  // This will accept parameters
+	re, _ := regexp.Compile(`LAST-MODIFIED;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	modified := trimField(result, "LAST-MODIFIED.*?:")  // This will discard all parameters
+	modified := trimField(result, "LAST-MODIFIED.*?:") // This will discard all parameters
 	t, _ := time.Parse(IcsFormat, modified)
 	return t
 }
 
 // parses the event DTStamp time (very similar to last-modified, but not the same)
 func (p *Parser) parseEventDTStamp(eventData string) time.Time {
-	re, _ := regexp.Compile(`DTSTAMP;?.*?:.*?\n`)  // This will accept parameters
+	re, _ := regexp.Compile(`DTSTAMP;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	modified := trimField(result, "DTSTAMP.*?:")  // This will discard all parameters
+	modified := trimField(result, "DTSTAMP.*?:") // This will discard all parameters
 	t, _ := time.Parse(IcsFormat, modified)
 	return t
 }
@@ -504,7 +503,6 @@ func (p *Parser) parseEventDTStamp(eventData string) time.Time {
 // parses the event start time
 func (p *Parser) parseEventStart(eventData string) time.Time {
 	reWholeDay, _ := regexp.Compile(`DTSTART;VALUE=DATE:.*?\n`)
-	re, _ := regexp.Compile(`DTSTART(;TZID=.*?){0,1}:.*?\n`)
 	resultWholeDay := reWholeDay.FindString(eventData)
 	var t time.Time
 
@@ -514,23 +512,28 @@ func (p *Parser) parseEventStart(eventData string) time.Time {
 		t, _ = time.Parse(IcsFormatWholeDay, modified)
 	} else {
 		// event that has start hour and minute
-		result := re.FindString(eventData)
-		modified := trimField(result, "DTSTART(;TZID=.*?){0,1}:")
+		re := regexp.MustCompile(`DTSTART(;TZID=(.*)?){0,1}:.*?\n`)
+		result := re.FindStringSubmatch(eventData)
 
-		if !strings.Contains(modified, "Z") {
-			modified = fmt.Sprintf("%sZ", modified)
+		var tz string
+		if len(result) == 3 {
+			tz = result[2]
 		}
-
-		t, _ = time.Parse(IcsFormat, modified)
+		location, _ := time.LoadLocation(tz)
+		modified := trimField(result[0], "DTSTART(;TZID=.*?){0,1}:")
+		modified = strings.Replace(modified, "Z", "", -1)
+		var err error
+		t, err = time.ParseInLocation(IcsFormat, modified, location)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
-
 	return t
 }
 
 // parses the event end time
 func (p *Parser) parseEventEnd(eventData string) time.Time {
 	reWholeDay, _ := regexp.Compile(`DTEND;VALUE=DATE:.*?\n`)
-	re, _ := regexp.Compile(`DTEND(;TZID=.*?){0,1}:.*?\n`)
 	resultWholeDay := reWholeDay.FindString(eventData)
 	var t time.Time
 
@@ -540,31 +543,37 @@ func (p *Parser) parseEventEnd(eventData string) time.Time {
 		t, _ = time.Parse(IcsFormatWholeDay, modified)
 	} else {
 		// event that has end hour and minute
-		result := re.FindString(eventData)
-		modified := trimField(result, "DTEND(;TZID=.*?){0,1}:")
+		re := regexp.MustCompile(`DTEND(;TZID=(.*)?){0,1}:.*?\n`)
+		result := re.FindStringSubmatch(eventData)
 
-		if !strings.Contains(modified, "Z") {
-			modified = fmt.Sprintf("%sZ", modified)
+		var tz string
+		if len(result) == 3 {
+			tz = result[2]
 		}
-		t, _ = time.Parse(IcsFormat, modified)
+		location, _ := time.LoadLocation(tz)
+		modified := trimField(result[0], "DTEND(;TZID=.*?){0,1}:")
+		modified = strings.Replace(modified, "Z", "", -1)
+		var err error
+		t, err = time.ParseInLocation(IcsFormat, modified, location)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return t
-
 }
 
 // parses all the TZID found
 func (p *Parser) parseDTZID(eventData string) []string {
 	re, _ := regexp.Compile(`TZID=(.*?)(;|:)`)
-	match := re.FindAllString( eventData, -1)
+	match := re.FindAllString(eventData, -1)
 	return match
 }
-	
 
 // parses the event RRULE (the repeater)
 func (p *Parser) parseEventRRule(eventData string) string {
-	re, _ := regexp.Compile(`RRULE;?.*?:.*?\n`)  // This will accept parameters
+	re, _ := regexp.Compile(`RRULE;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
-	return trimField(result, "RRULE.*?:")  // This will discard all parameters
+	return trimField(result, "RRULE.*?:") // This will discard all parameters
 }
 
 // parses the event LOCATION
@@ -576,10 +585,10 @@ func (p *Parser) parseEventLocation(eventData string) string {
 
 // parses the event GEO
 func (p *Parser) parseEventGeo(eventData string) *Geo {
-	re, _ := regexp.Compile(`GEO;?.*?:.*?\n`)  // This will accept parameters
+	re, _ := regexp.Compile(`GEO;?.*?:.*?\n`) // This will accept parameters
 	result := re.FindString(eventData)
 
-	value := trimField(result, "GEO.*?:")  // This will discard all parameters
+	value := trimField(result, "GEO.*?:") // This will discard all parameters
 	values := strings.Split(value, ";")
 	if len(values) < 2 {
 		return nil
